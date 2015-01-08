@@ -9,7 +9,7 @@ import logging
 import requests
 
 from .objects import get_obj_class
-from .objects import Server
+from .objects import Server, Analytics, Monitor
 
 
 class Quanta:
@@ -39,6 +39,8 @@ class Quanta:
         self.logger.addHandler(logging.StreamHandler())
 
         self.server = get_obj_class(Server, self, self.logger)
+        self.monitor = get_obj_class(Monitor, self, self.logger)
+        self.analytics = get_obj_class(Analytics, self, self.logger)
 
 
     def _get(self, route, jsonify=True, verify=True):
