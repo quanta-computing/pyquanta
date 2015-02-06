@@ -26,7 +26,7 @@ def requirements():
 
 
 setup(name='pyquanta',
-      version='0.1.0',
+      version='0.1.1',
       description='Pyquanta is a python module to interact with Quanta API',
       long_description=readme(),
       license='MIT',

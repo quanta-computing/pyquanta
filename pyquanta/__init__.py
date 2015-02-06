@@ -30,7 +30,10 @@ class Quanta:
             self.url = url
         else:
             self.url = "{}{}".format(self.BASE_URL, self.API_URL)
-        self.headers = {'Content-Type': 'application/json' }
+        self.headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+            }
         self.token = None
         self.cookies = requests.cookies.RequestsCookieJar()
 
@@ -132,7 +135,7 @@ class Quanta:
 
         """
         payload = {"user": {"email": login, "password": password}}
-        r = self._get("/.json", jsonify=False)
+        r = self._get("/users/login.json", jsonify=False)
         self.token = str(r.json().pop("csrf_token"))
         self.headers['X-CSRF-Token'] = self.token
         self.cookies = r.cookies
