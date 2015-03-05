@@ -8,8 +8,10 @@ import json
 import logging
 import requests
 
-from .objects import get_obj_class
-from .objects import Server, Analytics, Monitor
+from .resources import get_obj_class
+from .resources import Scenario, Server, Endpoint, Account
+
+from .exceptions import APIError, AttrError
 
 
 class Quanta:
@@ -41,9 +43,28 @@ class Quanta:
         self.logger.setLevel(logging.DEBUG)
         self.logger.addHandler(logging.StreamHandler())
 
-        self.server = get_obj_class(Server, self, self.logger)
-        self.monitor = get_obj_class(Monitor, self, self.logger)
-        self.analytics = get_obj_class(Analytics, self, self.logger)
+        self.scenarios = get_obj_class(Scenario, self, self.logger)
+        self.servers = get_obj_class(Server, self, self.logger)
+        self.magento_monitor = get_obj_class(Endpoint, self, self.logger)
+        self.analytics = get_obj_class(Account, self, self.logger)
+
+
+    def _request(self, route, data, method, jsonify=True, verify=True):
+        """
+        Executes an HTTP method on Quanta API
+
+        """
+        url = "{}{}".format(self.url, route)
+        if data is not None:
+            data = json.dumps(data)
+        self.logger.debug("{} {}".format(method.__name__.upper(), url))
+        r = method(url, headers=self.headers, data=data, cookies=self.cookies, verify=verify)
+        if jsonify:
+            r = r.json()
+            self.logger.debug(json.dumps(r, indent=2))
+            if 'error' in r:
+                raise APIError(r['error'])
+        return r
 
 
     def _get(self, route, jsonify=True, verify=True):
@@ -51,17 +72,7 @@ class Quanta:
         Retrieves information from quanta API
 
         """
-        url = "{}{}".format(self.url, route)
-        self.logger.debug("GET {}".format(url))
-        r = requests.get(url,
-                         headers=self.headers,
-                         cookies=self.cookies,
-                         verify=verify)
-        self.logger.debug(json.dumps(r.json(), indent=2))
-        if jsonify:
-            return r.json()
-        else:
-            return r
+        return self._request(route, None, requests.get, jsonify, verify)
 
 
     def _post(self, route, data, jsonify=True, verify=True):
@@ -69,18 +80,7 @@ class Quanta:
         Post information to quanta API
 
         """
-        url = "{}{}".format(self.url, route)
-        self.logger.debug("POST {}: {}".format(url, json.dumps(data)))
-        r = requests.post(url,
-                          data=json.dumps(data),
-                          headers=self.headers,
-                          cookies=self.cookies,
-                          verify=verify)
-        self.logger.debug(json.dumps(r.json(), indent=2))
-        if jsonify:
-            return r.json()
-        else:
-            return r
+        return self._request(route, data, requests.post, jsonify, verify)
 
 
     def _put(self, route, data, jsonify=True, verify=True):
@@ -88,18 +88,7 @@ class Quanta:
         Update an object in the API
 
         """
-        url = "{}{}".format(self.url, route)
-        self.logger.debug("PUT {}: {}".format(url, json.dumps(data)))
-        r = requests.put(url,
-                         headers=self.headers,
-                         cookies=self.cookies,
-                         data=json.dumps(data),
-                         verify=verify)
-        self.logger.debug(json.dumps(r.json(), indent=2))
-        if jsonify:
-            return r.json()
-        else:
-            return r
+        return self._request(route, data, requests.put, jsonify, verify)
 
 
     def _delete(self, route, jsonify=True, verify=True):
@@ -107,25 +96,7 @@ class Quanta:
         Delete an object from API
 
         """
-        url = "{}{}".format(self.url, route)
-        self.logger.debug("DELETE {}".format(url))
-        r = requests.delete(url,
-                            headers=self.headers,
-                            cookies=self.cookies,
-                            verify=verify)
-        self.logger.debug(json.dumps(r.json(), indent=2))
-        if jsonify:
-            return r.json()
-        else:
-            return r
-
-
-    def settings(self):
-        """
-        Returns the settings for current site
-
-        """
-        return self._get(self.site_route + '?q=settings')
+        return self._request(route, None, requests.put, jsonify, verify)
 
 
     def connect(self, login, password):
