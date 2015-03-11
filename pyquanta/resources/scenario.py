@@ -32,7 +32,6 @@ class Scenario(BaseObject):
     """
 
     BASE_ROUTE = '/websc/scenarios'
-    ROUTE_SUFFIX = '?with[]=settings'
     NESTED_RESOURCES = {
         'step': Step,
     }
