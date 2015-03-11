@@ -69,8 +69,6 @@ class JsonObject(object):
             value = kwargs.pop(attr.name, attr.default)
             if value is not None:
                 setattr(self, attr.name, value)
-        if len(kwargs) > 0:
-            raise AttrError('Invalid arguments provided: {}'.format(' '.join(kwargs.keys())))
 
 
     def _pluralize(self, str):
@@ -197,12 +195,8 @@ class BaseObject(APIObject):
 
 
     def update(self, **kwargs):
-        try:
-            r = self.quanta._put(self.get_route(self.id), data={self.DICT_KEY: self.as_dict()})
-            self.from_dict(**r[self.DICT_KEY])
-        except APIError as e:
-            self.from_dict(self.get(self.id).as_dict())
-            raise e
+        r = self.quanta._put(self.get_route(self.id), data={self.DICT_KEY: self.as_dict()})
+        self.from_dict(**r[self.DICT_KEY])
 
 
     def delete(self):
