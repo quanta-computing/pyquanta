@@ -9,14 +9,13 @@ class Server(BaseObject):
     This class represents a server object
 
     """
-    BASE_ROUTE = 'system/servers'
-    ROUTE_SUFFIX = 'with[]=settings&with[]=proxies'
+    BASE_ROUTE = '/system/servers'
     ATTRS = [
         Attribute('name'),
         Attribute('role'),
         Attribute('host'),
         Attribute('port', default=10050),
         Attribute('enabled', default=True),
-        Attribute('template'),
+        Attribute('template', default='passive'),
     ]
     DICT_KEY = 'server'
