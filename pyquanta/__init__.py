@@ -9,7 +9,7 @@ import logging
 import requests
 
 from .resources import get_obj_class
-from .resources import Scenario, Server, Endpoint, Account
+from .resources import Scenario, Server, Endpoint, Account, Organization, Site
 
 from .exceptions import APIError, AttrError
 
@@ -23,7 +23,7 @@ class Quanta:
     API_URL = "/api"
 
 
-    def __init__(self, url=None):
+    def __init__(self, url=None, debug=False):
         """
         Initialize Quanta instance with different parameters
 
@@ -40,9 +40,14 @@ class Quanta:
         self.cookies = requests.cookies.RequestsCookieJar()
 
         self.logger = logging.getLogger("pyquanta")
-        self.logger.setLevel(logging.DEBUG)
+        if debug:
+            self.logger.setLevel(logging.DEBUG)
+        else:
+            self.logger.setLevel(logging.INFO)
         self.logger.addHandler(logging.StreamHandler())
 
+        self.sites = get_obj_class(Site, self, self.logger)
+        self.organizations = get_obj_class(Organization, self, self.logger)
         self.scenarios = get_obj_class(Scenario, self, self.logger)
         self.servers = get_obj_class(Server, self, self.logger)
         self.magento_monitor = get_obj_class(Endpoint, self, self.logger)
@@ -59,6 +64,14 @@ class Quanta:
             data = json.dumps(data)
         self.logger.debug("{} {}".format(method.__name__.upper(), url))
         r = method(url, headers=self.headers, data=data, cookies=self.cookies, verify=verify)
+        if r.status_code != 200:
+            try:
+                r = r.json()
+                err = r['error']
+            except:
+                err = 'HTTP Error {} returned from server'.format(r.status_code)
+            finally:
+                raise APIError(err)
         if jsonify:
             r = r.json()
             self.logger.debug(json.dumps(r, indent=2))
@@ -115,7 +128,7 @@ class Quanta:
         self.token = str(r.json().pop("csrf_token"))
         self.headers['X-CSRF-Token'] = self.token
         self.cookies = r.cookies
-        self.logger.info("Successfully connected with token: {}".format(self.token))
+        self.logger.debug("Successfully connected with token: {}".format(self.token))
 
 
     @property

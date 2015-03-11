@@ -8,7 +8,8 @@ from .scenario import Scenario
 from .system import Server
 from .magento import Endpoint
 from .analytics import Account
-
+from .organization import Organization
+from .site import Site
 
 def get_obj_class(klass, _quanta, _logger):
     """
